@@ -1,0 +1,3 @@
+env = Environment(CCFLAGS='-g')
+
+env.Program('stack.c')
