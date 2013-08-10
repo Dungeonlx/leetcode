@@ -10,7 +10,7 @@ typedef struct {
     /* Return size */
     int (*size)();
     /* Access next element */
-    void (*top)();
+    stack_element_t *(*top)();
     /* Insert element */
     void (*push)();
     /* Remove top element */
@@ -27,9 +27,10 @@ static int m_count = 0;
 /* Begin && Current element */
 static stack_element_t *m_begin_element = NULL;
 static stack_element_t *m_current_element = NULL;
+static stack_element_t *m_top_element = NULL;
 
 static int m_size();
-static void m_top();
+static stack_element_t *m_top();
 static void m_push(int data);
 static void m_pop();
 static void m_travel();
@@ -58,9 +59,14 @@ static int m_size()
     return m_count;
 }
 
-static void m_top() 
+static stack_element_t *m_top() 
 {
+    if (m_top_element == NULL) 
+        m_top_element = m_begin_element;
+    else
+        m_top_element = m_top_element->next;
 
+    return m_top_element;
 }
 
 static void m_push(int data) 
@@ -97,6 +103,7 @@ static void m_pop()
             free(tmp->next);
             tmp->next = NULL;
             m_current_element = tmp;
+            m_count--;
             break;
         }
         tmp = tmp->next;
@@ -125,6 +132,7 @@ static void m_cleanup()
     }
     m_begin_element = NULL;
     m_current_element = NULL;
+    m_top_element = NULL;
 }
 
 void stack_cleanup(stack_t *stack) 
@@ -151,13 +159,17 @@ int main(int argc, char *argv[])
     {
         stack->push(i);
     }
+    printf("DEBUG: top %d ......\n", stack->top()->data);
+    printf("DEBUG: top %d ......\n", stack->top()->data);
+    printf("DEBUG: top %d ......\n", stack->top()->data);
+    printf("DEBUG: size %d ......\n", stack->size());
     printf("DEBUG: travel ......\n");
     stack->travel();
     printf("DEBUG: pop ......\n");
     stack->pop();
     printf("DEBUG: travel ......\n");
     stack->travel();
-    printf("DEBUG: push ......\n");
+    printf("DEBUG: push 66 ......\n");
     stack->push(66);
     printf("DEBUG: travel ......\n");
     stack->travel();
