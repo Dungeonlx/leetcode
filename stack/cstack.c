@@ -116,9 +116,10 @@ static void m_travel()
 
     while (tmp) 
     {
-        printf("DEBUG: %d\n", tmp->data);
+        printf("%d\t", tmp->data);
         tmp = tmp->next;
     }
+    printf("\n");
 }
 
 static void m_cleanup() 
@@ -159,19 +160,19 @@ int main(int argc, char *argv[])
     {
         stack->push(i);
     }
-    printf("DEBUG: top %d ......\n", stack->top()->data);
-    printf("DEBUG: top %d ......\n", stack->top()->data);
-    printf("DEBUG: top %d ......\n", stack->top()->data);
-    printf("DEBUG: size %d ......\n", stack->size());
-    printf("DEBUG: travel ......\n");
+    printf("DEBUG: top %d\n", stack->top()->data);
+    printf("DEBUG: top %d\n", stack->top()->data);
+    printf("DEBUG: top %d\n", stack->top()->data);
+    printf("DEBUG: size %d\n", stack->size());
+    printf("DEBUG: travel\n");
     stack->travel();
-    printf("DEBUG: pop ......\n");
+    printf("DEBUG: pop\n");
     stack->pop();
-    printf("DEBUG: travel ......\n");
+    printf("DEBUG: travel\n");
     stack->travel();
-    printf("DEBUG: push 66 ......\n");
+    printf("DEBUG: push 66\n");
     stack->push(66);
-    printf("DEBUG: travel ......\n");
+    printf("DEBUG: travel\n");
     stack->travel();
     stack_cleanup(stack);
 
