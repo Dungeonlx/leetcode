@@ -17,13 +17,13 @@ permalink: /home/
 </div>
 
 <div class="note">
-    有两种方法来遍历一个图。你还记得是哪<a href="http://zh.wikipedia.org/zh-cn/%E5%9B%BE%E9%81%8D%E5%8E%86" target="_blank">两种</a>吗？你能判断这个图是<a href="http://zh.wikipedia.org/zh-cn/%E5%9B%BE" target="_blank">有向图还是无向图</a>吗？
+    <p>有两种方法来遍历一个图。你还记得是哪<a href="http://zh.wikipedia.org/zh-cn/%E5%9B%BE%E9%81%8D%E5%8E%86" target="_blank">两种</a>吗？你能判断这个图是<a href="http://zh.wikipedia.org/zh-cn/%E5%9B%BE" target="_blank">有向图还是无向图</a>吗？</p>
 </div>
 
-Solution:
-There are two main ways to traverse a graph: Breadth-first or Depth-first. Let’s try the Breadth-first approach first, which requires a queue. For the Depth-first approach, please see Clone Graph Part II.
+leetcode.com提供的答案
+有两种方法来遍历一个图：广度优先、<a href="http://www.shendu.com" target="_blank">深度</a>优先。先尝试广度优先，需要一个队列。
 
-How does the breadth-first traversal works? Easy, as we pop a node off the queue, we copy each of its neighbors, and push them to the queue.
+广度优先的遍历是怎么鼓捣的？从队列里弹出一个节点，拷贝这个节点的全部邻居，再把这些邻居插入队列。
 
 A straight forward breadth-first traversal seemed to work. But some details are still missing. For example, how do we connect the nodes of the cloned graph?
 
