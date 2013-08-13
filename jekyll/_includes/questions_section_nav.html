@@ -1,0 +1,22 @@
+<div class="section-nav">
+  <div class="left align-right">
+    {% if page.prev_section != null %}
+    <a href="{{ site.url }}/questions/{{ page.prev_section }}" class="prev">
+        返回
+      </a>
+    {% else %}
+      <span class="prev disabled">返回</span>
+    {% endif %}
+  </div>
+  <div class="right align-left">
+    {% if page.next_section != null %}
+    <a href="{{ site.url }}/questions/{{ page.next_section }}" class="next">
+        下一个
+      </a>
+    {% else %}
+      <span class="next disabled">下一个</span>
+    {% endif %}
+  </div>
+  <div class="clear"></div>
+</div>
+
