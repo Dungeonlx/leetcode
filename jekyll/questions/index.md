@@ -9,9 +9,11 @@ permalink: /home/
     克隆一个图。输入的是一个Node指针。返回值是被克隆的图的Node指针。
 
     一个图的结构体定义如下：
+    {% highlight cpp linenos %}
     struct Node {
         std::vector neighbors;
     }
+    {% endhighlight %}
 </div>
 
 Hint:
