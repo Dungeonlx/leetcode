@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>LeetCode中文alpha发布</title>
+  <title></title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="alternate" type="application/rss+xml" title="Jekyll • Simple, blog-aware, static sites - Feed" href="/feed.xml" />
   <link rel="alternate" type="application/atom+xml" title="Recent commits to Jekyll’s master branch" href="https://github.com/mojombo/jekyll/commits/master.atom" />
@@ -27,7 +27,7 @@
   <li class="">
   <a href="/questions/home">题库</a>
   </li>
-  <li class="current">
+  <li class="">
   <a href="/news">新闻</a>
   </li>
   <li class="">
@@ -53,7 +53,7 @@
   <li class="">
   <a href="/questions/home">题库</a>
   </li>
-  <li class="current">
+  <li class="">
   <a href="/news">新闻</a>
   </li>
   <li class="">
@@ -66,73 +66,44 @@
 </header>
 
 
-    <section class="news">
+    <section class="questions">
     <div class="grid">
-
-      <div class="docs-nav-mobile unit whole show-on-mobiles">
-  <select onchange="if (this.value) window.location.href=this.value">
-    <option value="">题库</option>
-    <option value="/news/">新闻</option>
-    <optgroup label="v1.x">
-      
-      <option value="/news/2013/08/13/leetcode-cn-launched">LeetCode中文alpha发布</option>
-      
-    </optgroup>
-  </select>
-</div>
-
 
       <div class="unit four-fifths">
         <article>
-  <h2>
-    LeetCode中文alpha发布
-    <a href="/news/2013/08/13/leetcode-cn-launched" class="permalink" title="Permalink">∞</a>
-  </h2>
-  <span class="post-category">
+          <h1></h1>
+          <p>Given a string S, find the longest palindromic substring in S.</p>
+
+<p>Note: This is Part II of the article: Longest Palindromic Substring. Here, we describe an algorithm (Manacher’s algorithm) which finds the longest palindromic substring in linear time. Please read Part I for more background information.</p>
+
+<p>In my previous post we discussed a total of four different methods, among them there’s a pretty simple algorithm with O(N2) run time and constant space complexity. Here, we discuss an algorithm that runs in O(N) time and O(N) space, also known as Manacher’s algorithm.</p>
+
+<p>Hint: Think how you would improve over the simpler O(N2) approach. Consider the worst case scenarios. The worst case scenarios are the inputs with multiple palindromes overlapping each other. For example, the inputs: “aaaaaaaaa” and “cabcbabcbabcba”. In fact, we could take advantage of the palindrome’s symmetric property and avoid some of the unnecessary computations.</p>
+
+<p>An O(N) Solution (Manacher’s Algorithm): First, we transform the input string, S, to another string T by inserting a special character ‘#’ in between letters. The reason for doing so will be immediately clear to you soon.</p>
+
+<p>For example: S = “abaaba”, T = “#a#b#a#a#b#a#”.</p>
+
+<p>To find the longest palindromic substring, we need to expand around each Ti such that Ti-d … Ti+d forms a palindrome. You should immediately see that d is the length of the palindrome itself centered at Ti.</p>
+          <div class="section-nav">
+  <div class="left align-right">
     
-    <span class="label">release</span>
+    <a href="/docs/home" class="prev">
+        返回
+      </a>
     
-  </span>
-  <div class="post-meta">
-    <span class="post-date">
-      13 Aug 2013
-    </span>
-    <a href="https://github.com/xiangzhai" class="post-author">
-      <img src="https://github.com/xiangzhai.png" class="avatar" />
-      xiangzhai
-    </a>
   </div>
-  <p class="post-content">
-    <p>LeetCode中文alpha发布 ^_^</p>
-  </p>
-</article>
-
-      </div>
-
-      <div class="unit one-fifth hide-on-mobiles">
-  <aside>
-    <ul>
-      <li class="">
-        <a href="/news/">All News</a>
-      </li>
-      <li class="">
-        <a href="/news/releases/">LeetCode Releases</a>
-      </li>
-    </ul>
-    <h4>Recent Releases</h4>
-    <ul>
-      
-      <li class="current">
-        <a href="/news/2013/08/13/leetcode-cn-launched">Version </a>
-      </li>
-      
-      <li>
-        <a href="/docs/history/">History »</a>
-      </li>
-    </ul>
-  </aside>
+  <div class="right align-left">
+    
+      <span class="next disabled">下一个</span>
+    
+  </div>
+  <div class="clear"></div>
 </div>
 
+
+        </article>
+      </div>
 
       <div class="clear"></div>
 
