@@ -1,7 +1,7 @@
 ---
 layout: news
 title: News
-permalink: /news/
+permalink: /
 author: all
 ---
 
