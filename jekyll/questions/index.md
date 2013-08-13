@@ -6,9 +6,9 @@ permalink: /home/
 ---
 
 <div class="note info">
-    克隆一个图。输入的是一个Node指针。返回值是被克隆的图的Node指针。
+    <p>克隆一个图。输入的是一个Node指针。返回值是被克隆的图的Node指针。</p>
 
-    一个图的结构体定义如下：
+    <p>一个图的结构体定义如下：</p>
     {% highlight cpp linenos %}
     struct Node {
         std::vector neighbors;
@@ -16,8 +16,9 @@ permalink: /home/
     {% endhighlight %}
 </div>
 
-Hint:
-There are two main ways to traverse a graph. Do you still remember them? Could you tell if the graph is directed or undirected?
+<div class="note">
+    有两种方法来遍历一个图。你还记得是哪<a href="http://zh.wikipedia.org/zh-cn/%E5%9B%BE%E9%81%8D%E5%8E%86" target="_blank">两种</a>吗？你能判断这个图是<a href="http://zh.wikipedia.org/zh-cn/%E5%9B%BE" target="_blank">有向图还是无向图</a>吗？
+</div>
 
 Solution:
 There are two main ways to traverse a graph: Breadth-first or Depth-first. Let’s try the Breadth-first approach first, which requires a queue. For the Depth-first approach, please see Clone Graph Part II.
