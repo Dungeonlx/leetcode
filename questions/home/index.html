@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>IT面试题库</title>
+  <title>克隆图 第一部</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="alternate" type="application/rss+xml" title="Jekyll • Simple, blog-aware, static sites - Feed" href="/feed.xml" />
   <link rel="alternate" type="application/atom+xml" title="Recent commits to Jekyll’s master branch" href="https://github.com/mojombo/jekyll/commits/master.atom" />
@@ -71,28 +71,28 @@
 
       <div class="unit four-fifths">
         <article>
-          <h1>IT面试题库</h1>
-          <p>This site aims to be a comprehensive guide to Jekyll. We’ll cover topics such as getting your site up and running, creating and managing your content, customizing the way your site works and looks, deploying to various environments, and give you some advice on participating in the future development of Jekyll itself.</p>
+          <h1>克隆图 第一部</h1>
+          <p>Clone a graph. Input is a Node pointer. Return the Node pointer of the cloned graph.</p>
 
-<h2 id='so_what_is_jekyll_exactly'>So what is Jekyll, exactly?</h2>
+<p>A graph is defined below: struct Node { vector neighbors; } Hint: There are two main ways to traverse a graph. Do you still remember them? Could you tell if the graph is directed or undirected?</p>
 
-<p>Jekyll is a simple, blog-aware, static site generator. It takes a template directory containing raw text files in various formats, runs it through <a href='http://daringfireball.net/projects/markdown/'>Markdown</a> (or <a href='http://textile.sitemonks.com/'>Textile</a>) and <a href='http://wiki.shopify.com/Liquid'>Liquid</a> converters, and spits out a complete, ready-to-publish static website suitable for serving with your favorite web server. Jekyll also happens to be the engine behind <a href='http://pages.github.com'>GitHub Pages</a>, which means you can use Jekyll to host your project’s page, blog, or website from GitHub’s servers <strong>for free</strong>.</p>
+<p>Solution: There are two main ways to traverse a graph: Breadth-first or Depth-first. Let’s try the Breadth-first approach first, which requires a queue. For the Depth-first approach, please see Clone Graph Part II.</p>
 
-<h2 id='protips_notes_and_warnings'>ProTips™, Notes, and Warnings</h2>
+<p>How does the breadth-first traversal works? Easy, as we pop a node off the queue, we copy each of its neighbors, and push them to the queue.</p>
 
-<p>Throughout this guide there are a number of small-but-handy pieces of information that can make using Jekyll easier, more interesting, and less hazardous. Here’s what to look out for.</p>
-<div class='note'>
-  <h5>ProTips™ help you get more from Jekyll</h5>
-  <p>These are tips and tricks that will help you be a Jekyll wizard!</p>
-</div><div class='note info'>
-  <h5>Notes are handy pieces of information</h5>
-  <p>These are for the extra tidbits sometimes necessary to understand
-     Jekyll.</p>
-</div><div class='note warning'>
-  <h5>Warnings help you not blow things up</h5>
-  <p>Be aware of these messages if you wish to avoid certain death.</p>
-</div>
-<p>If you come across anything along the way that we haven’t covered, or if you know of a tip you think others would find handy, please <a href='https://github.com/mojombo/jekyll/issues/new'>file an issue</a> and we’ll see about including it in this guide.</p>
+<p>A straight forward breadth-first traversal seemed to work. But some details are still missing. For example, how do we connect the nodes of the cloned graph?</p>
+
+<p>Before we continue, we first need to make sure if the graph is directed or not. If you notice how Node is defined above, it is quite obvious that the graph is a directed graph. Why?</p>
+
+<p>For example, A can have a neighbor called B. Therefore, we may traverse from A to B. An undirected graph implies that B can always traverse back to A. Is it true here? No, because whether B could traverse back to A depends if one of B’s neighbor is A.</p>
+
+<p>The fact that B can traverse back to A implies that the graph may contain a cycle. You must take extra care to handle this case. Imagine that you finished implementing without considering this case, and later being pointed out by your interviewer that your code has an infinite loop, yuck!</p>
+
+<p>Let’s analyze this further by using the below example:</p>
+
+<p>A simple graph Assume that the starting point of the graph is A. First, you make a copy of node A (A2), and found that A has only one neighbor B. You make a copy of B (B2) and connects A2-&gt;B2 by pushing B2 as A2′s neighbor. Next, you find that B has A as neighbor, which you have already made a copy of. Here, we have to be careful not to make a copy of A again, but to connect B2-&gt;A2 by pushing A2 as B2′s neighbor. But, how do we know if a node has already been copied?</p>
+
+<p>Easy, we could use a hash table! As we copy a node, we insert it into the table. If we later find that one of a node’s neighbor is already in the table, we do not make a copy of that neighbor, but to push its neighbor’s copy to its copy instead. Therefore, the hash table would need to store a mapping of key-value pairs, where the key is a node in the original graph and its value is the node’s copy.</p>
           <div class="section-nav">
   <div class="left align-right">
     

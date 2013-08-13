@@ -1,6 +1,6 @@
 ---                                                                             
 layout: questions                                                                    
-title:  
+title: 最长的回文子字符串 第二部 
 prev_section: home                                                              
 permalink: /longest-palindromic-substring-part-ii/
 ---
