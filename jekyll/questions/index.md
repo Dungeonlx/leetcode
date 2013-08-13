@@ -1,16 +1,19 @@
 ---
 layout: questions
-title: 克隆图 第一部
+title: 克隆图 第一部分
 next_section: longest-palindromic-substring-part-ii
 permalink: /home/
 ---
 
-Clone a graph. Input is a Node pointer. Return the Node pointer of the cloned graph.
+<div class="note info">
+    克隆一个图。输入的是一个Node指针。返回值是被克隆的图的Node指针。
 
-A graph is defined below:
-struct Node {
-vector neighbors;
-}
+    一个图的结构体定义如下：
+    struct Node {
+        std::vector neighbors;
+    }
+</div>
+
 Hint:
 There are two main ways to traverse a graph. Do you still remember them? Could you tell if the graph is directed or undirected?
 

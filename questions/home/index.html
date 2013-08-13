@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>克隆图 第一部</title>
+  <title>克隆图 第一部分</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="alternate" type="application/rss+xml" title="Jekyll • Simple, blog-aware, static sites - Feed" href="/feed.xml" />
   <link rel="alternate" type="application/atom+xml" title="Recent commits to Jekyll’s master branch" href="https://github.com/mojombo/jekyll/commits/master.atom" />
@@ -71,10 +71,16 @@
 
       <div class="unit four-fifths">
         <article>
-          <h1>克隆图 第一部</h1>
-          <p>Clone a graph. Input is a Node pointer. Return the Node pointer of the cloned graph.</p>
+          <h1>克隆图 第一部分</h1>
+          <div class='note info'>
+    克隆一个图。输入的是一个Node指针。返回值是被克隆的图的Node指针。
 
-<p>A graph is defined below: struct Node { vector neighbors; } Hint: There are two main ways to traverse a graph. Do you still remember them? Could you tell if the graph is directed or undirected?</p>
+    一个图的结构体定义如下：
+    struct Node {
+        std::vector neighbors;
+    }
+</div>
+<p>Hint: There are two main ways to traverse a graph. Do you still remember them? Could you tell if the graph is directed or undirected?</p>
 
 <p>Solution: There are two main ways to traverse a graph: Breadth-first or Depth-first. Let’s try the Breadth-first approach first, which requires a queue. For the Depth-first approach, please see Clone Graph Part II.</p>
 
