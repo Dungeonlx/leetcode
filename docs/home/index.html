@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
   <meta charset="UTF-8">
-  <title>IT面试题库</title>
+  <title>使用BlueZ用C语言开发蓝牙程序</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="alternate" type="application/rss+xml" title="Jekyll • Simple, blog-aware, static sites - Feed" href="/feed.xml" />
   <link rel="alternate" type="application/atom+xml" title="Recent commits to Jekyll’s master branch" href="https://github.com/mojombo/jekyll/commits/master.atom" />
@@ -24,8 +24,11 @@
   <li class="">
   <a href="/">首页</a>
   </li>
-  <li class="current">
+  <li class="">
   <a href="/questions/home">题库</a>
+  </li>
+  <li class="current">            
+  <a href="/docs/home">文档</a>                              
   </li>
   <li class="">
   <a href="/news">新闻</a>
@@ -50,8 +53,11 @@
   <li class="">
   <a href="/">首页</a>
   </li>
-  <li class="current">
+  <li class="">
   <a href="/questions/home">题库</a>
+  </li>
+  <li class="current">            
+  <a href="/docs/home">文档</a>                              
   </li>
   <li class="">
   <a href="/news">新闻</a>
@@ -115,28 +121,162 @@
 
       <div class="unit four-fifths">
         <article>
-          <h1>IT面试题库</h1>
-          <p>This site aims to be a comprehensive guide to Jekyll. We’ll cover topics such as getting your site up and running, creating and managing your content, customizing the way your site works and looks, deploying to various environments, and give you some advice on participating in the future development of Jekyll itself.</p>
+          <h1>使用BlueZ用C语言开发蓝牙程序</h1>
+          Bluetooth programming in C with BlueZ
 
-<h2 id='so_what_is_jekyll_exactly'>So what is Jekyll, exactly?</h2>
+There are reasons to prefer developing Bluetooth applications in C instead of in a high level language such as Python. The Python environment might not be available or might not fit on the target device; strict application requirements on program size, speed, and memory usage may preclude the use of an interpreted language like Python; the programmer may desire finer control over the local Bluetooth adapter than PyBluez provides; or the project may be to create a shared library for other applications to link against instead of a standalone application. As of this writing, BlueZ is a powerful Bluetooth communications stack with extensive APIs that allows a user to fully exploit all local Bluetooth resources, but it has no official documentation. Furthermore, there is very little unofficial documentation as well. Novice developers requesting documentation on the official mailing lists [1] are typically rebuffed and told to figure out the API by reading through the BlueZ source code. This is a time consuming process that can only reveal small pieces of information at a time, and is quite often enough of an obstacle to deter many potential developers.
 
-<p>Jekyll is a simple, blog-aware, static site generator. It takes a template directory containing raw text files in various formats, runs it through <a href='http://daringfireball.net/projects/markdown/'>Markdown</a> (or <a href='http://textile.sitemonks.com/'>Textile</a>) and <a href='http://wiki.shopify.com/Liquid'>Liquid</a> converters, and spits out a complete, ready-to-publish static website suitable for serving with your favorite web server. Jekyll also happens to be the engine behind <a href='http://pages.github.com'>GitHub Pages</a>, which means you can use Jekyll to host your project’s page, blog, or website from GitHub’s servers <strong>for free</strong>.</p>
+This chapter presents a short introduction to developing Bluetooth applications in C with BlueZ. The tasks covered in chapter 2 are now explained in greater detail here for C programmers.
+4.1. Choosing a communication partner
 
-<h2 id='protips_notes_and_warnings'>ProTips™, Notes, and Warnings</h2>
+A simple program that detects nearby Bluetooth devices is shown in Example 4-1. The program reserves system Bluetooth resources, scans for nearby Bluetooth devices, and then looks up the user friendly name for each detected device. A more detailed explanation of the data structures and functions used follows.
 
-<p>Throughout this guide there are a number of small-but-handy pieces of information that can make using Jekyll easier, more interesting, and less hazardous. Here’s what to look out for.</p>
-<div class='note'>
-  <h5>ProTips™ help you get more from Jekyll</h5>
-  <p>These are tips and tricks that will help you be a Jekyll wizard!</p>
-</div><div class='note info'>
-  <h5>Notes are handy pieces of information</h5>
-  <p>These are for the extra tidbits sometimes necessary to understand
-     Jekyll.</p>
-</div><div class='note warning'>
-  <h5>Warnings help you not blow things up</h5>
-  <p>Be aware of these messages if you wish to avoid certain death.</p>
+Example 4-1. simplescan.c
+<div class="highlight"><pre><code class="c"><span class="lineno"> 1</span> <span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="lineno"> 2</span> <span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="lineno"> 3</span> <span class="cp">#include &lt;unistd.h&gt;</span>
+<span class="lineno"> 4</span> <span class="cp">#include &lt;sys/socket.h&gt;</span>
+<span class="lineno"> 5</span> <span class="cp">#include &lt;bluetooth/bluetooth.h&gt;</span>
+<span class="lineno"> 6</span> <span class="cp">#include &lt;bluetooth/hci.h&gt;</span>
+<span class="lineno"> 7</span> <span class="cp">#include &lt;bluetooth/hci_lib.h&gt;</span>
+<span class="lineno"> 8</span> 
+<span class="lineno"> 9</span> <span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+<span class="lineno">10</span> <span class="p">{</span>
+<span class="lineno">11</span>     <span class="n">inquiry_info</span> <span class="o">*</span><span class="n">ii</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+<span class="lineno">12</span>     <span class="kt">int</span> <span class="n">max_rsp</span><span class="p">,</span> <span class="n">num_rsp</span><span class="p">;</span>
+<span class="lineno">13</span>     <span class="kt">int</span> <span class="n">dev_id</span><span class="p">,</span> <span class="n">sock</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">flags</span><span class="p">;</span>
+<span class="lineno">14</span>     <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+<span class="lineno">15</span>     <span class="kt">char</span> <span class="n">addr</span><span class="p">[</span><span class="mi">19</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">0</span> <span class="p">};</span>
+<span class="lineno">16</span>     <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">248</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">0</span> <span class="p">};</span>
+<span class="lineno">17</span> 
+<span class="lineno">18</span>     <span class="n">dev_id</span> <span class="o">=</span> <span class="n">hci_get_route</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
+<span class="lineno">19</span>     <span class="n">sock</span> <span class="o">=</span> <span class="n">hci_open_dev</span><span class="p">(</span> <span class="n">dev_id</span> <span class="p">);</span>
+<span class="lineno">20</span>     <span class="k">if</span> <span class="p">(</span><span class="n">dev_id</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">sock</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+<span class="lineno">21</span>         <span class="n">perror</span><span class="p">(</span><span class="s">&quot;opening socket&quot;</span><span class="p">);</span>
+<span class="lineno">22</span>         <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="lineno">23</span>     <span class="p">}</span>
+<span class="lineno">24</span> 
+<span class="lineno">25</span>     <span class="n">len</span>  <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+<span class="lineno">26</span>     <span class="n">max_rsp</span> <span class="o">=</span> <span class="mi">255</span><span class="p">;</span>
+<span class="lineno">27</span>     <span class="n">flags</span> <span class="o">=</span> <span class="n">IREQ_CACHE_FLUSH</span><span class="p">;</span>
+<span class="lineno">28</span>     <span class="n">ii</span> <span class="o">=</span> <span class="p">(</span><span class="n">inquiry_info</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="n">max_rsp</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">inquiry_info</span><span class="p">));</span>
+<span class="lineno">29</span>     
+<span class="lineno">30</span>     <span class="n">num_rsp</span> <span class="o">=</span> <span class="n">hci_inquiry</span><span class="p">(</span><span class="n">dev_id</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">max_rsp</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ii</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
+<span class="lineno">31</span>     <span class="k">if</span><span class="p">(</span> <span class="n">num_rsp</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="n">perror</span><span class="p">(</span><span class="s">&quot;hci_inquiry&quot;</span><span class="p">);</span>
+<span class="lineno">32</span> 
+<span class="lineno">33</span>     <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">num_rsp</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+<span class="lineno">34</span>         <span class="n">ba2str</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">ii</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">bdaddr</span><span class="p">,</span> <span class="n">addr</span><span class="p">);</span>
+<span class="lineno">35</span>         <span class="n">memset</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">name</span><span class="p">));</span>
+<span class="lineno">36</span>         <span class="k">if</span> <span class="p">(</span><span class="n">hci_read_remote_name</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="o">&amp;</span><span class="p">(</span><span class="n">ii</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">bdaddr</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> 
+<span class="lineno">37</span>             <span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+<span class="lineno">38</span>         <span class="n">strcpy</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s">&quot;[unknown]&quot;</span><span class="p">);</span>
+<span class="lineno">39</span>         <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s  %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">addr</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+<span class="lineno">40</span>     <span class="p">}</span>
+<span class="lineno">41</span> 
+<span class="lineno">42</span>     <span class="n">free</span><span class="p">(</span> <span class="n">ii</span> <span class="p">);</span>
+<span class="lineno">43</span>     <span class="n">close</span><span class="p">(</span> <span class="n">sock</span> <span class="p">);</span>
+<span class="lineno">44</span>     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno">45</span> <span class="p">}</span>
+</code></pre>
 </div>
-<p>If you come across anything along the way that we haven’t covered, or if you know of a tip you think others would find handy, please <a href='https://github.com/mojombo/jekyll/issues/new'>file an issue</a> and we’ll see about including it in this guide.</p>
+
+
+4.1.1. Compilation
+
+To compile our program, invoke gcc and link against libbluetooth
+
+# gcc -o simplescan simplescan.c -lbluetooth
+4.1.2. Explanation
+
+<div class="highlight"><pre><code class="c"><span class="lineno">1</span> <span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+<span class="lineno">2</span>     <span class="kt">uint8_t</span> <span class="n">b</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
+<span class="lineno">3</span> <span class="p">}</span> <span class="n">__attribute__</span><span class="p">((</span><span class="n">packed</span><span class="p">))</span> <span class="kt">bdaddr_t</span><span class="p">;</span>
+</code></pre>
+</div>
+
+
+The basic data structure used to specify a Bluetooth device address is the bdaddr_t. All Bluetooth addresses in BlueZ will be stored and manipulated as bdaddr_t structures. BlueZ provides two convenience functions to convert between strings and bdaddr_t structures.
+
+<div class="highlight"><pre><code class="c"><span class="lineno">1</span> <span class="kt">int</span> <span class="nf">str2ba</span><span class="p">(</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">str</span><span class="p">,</span> <span class="kt">bdaddr_t</span> <span class="o">*</span><span class="n">ba</span> <span class="p">);</span>
+<span class="lineno">2</span> <span class="kt">int</span> <span class="nf">ba2str</span><span class="p">(</span> <span class="k">const</span> <span class="kt">bdaddr_t</span> <span class="o">*</span><span class="n">ba</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">str</span> <span class="p">);</span>
+</code></pre>
+</div>
+
+
+str2ba takes an string of the form XX:XX:XX:XX:XX:XX, where each XX is a hexadecimal number specifying an octet of the 48-bit address, and packs it into a 6-byte bdaddr_t. ba2str does exactly the opposite.
+
+Local Bluetooth adapters are assigned identifying numbers starting with 0, and a program must specify which adapter to use when allocating system resources. Usually, there is only one adapter or it doesn't matter which one is used, so passing NULL to hci_get_route will retrieve the resource number of the first available Bluetooth adapter.
+
+<div class="highlight"><pre><code class="c"><span class="lineno">1</span> <span class="kt">int</span> <span class="nf">hci_get_route</span><span class="p">(</span> <span class="kt">bdaddr_t</span> <span class="o">*</span><span class="n">bdaddr</span> <span class="p">);</span>
+<span class="lineno">2</span> <span class="kt">int</span> <span class="nf">hci_open_dev</span><span class="p">(</span> <span class="kt">int</span> <span class="n">dev_id</span> <span class="p">);</span>
+</code></pre>
+</div>
+
+
+Note    
+
+It is not a good idea to hard-code the device number 0, because that is not always the id of the first adapter. For example, if there were two adapters on the system and the first adapter (id 0) is disabled, then the first available adapter is the one with id 1.
+
+If there are multiple Bluetooth adapters present, then to choose the adapter with address 01:23:45:67:89:AB, pass the char * representation of the address to hci_devid and use that in place of hci_get_route.
+
+<div class="highlight"><pre><code class="c"><span class="lineno">1</span> <span class="kt">int</span> <span class="n">dev_id</span> <span class="o">=</span> <span class="n">hci_devid</span><span class="p">(</span> <span class="s">&quot;01:23:45:67:89:AB&quot;</span> <span class="p">);</span>
+</code></pre>
+</div>
+
+
+Most Bluetooth operations require the use of an open socket. hci_open_dev is a convenience function that opens a Bluetooth socket with the specified resource number [2]. To be clear, the socket opened by hci_open_dev represents a connection to the microcontroller on the specified local Bluetooth adapter, and not a connection to a remote Bluetooth device. Performing low level Bluetooth operations involves sending commands directly to the microcontroller with this socket, and Section 4.5 discusses this in greater detail.
+
+After choosing the local Bluetooth adapter to use and allocating system resources, the program is ready to scan for nearby Bluetooth devices. In the example, hci_inquiry performs a Bluetooth device discovery and returns a list of detected devices and some basic information about them in the variable ii. On error, it returns -1 and sets errno accordingly.
+
+<div class="highlight"><pre><code class="c"><span class="lineno">1</span> <span class="kt">int</span> <span class="nf">hci_inquiry</span><span class="p">(</span><span class="kt">int</span> <span class="n">dev_id</span><span class="p">,</span> <span class="kt">int</span> <span class="n">len</span><span class="p">,</span> <span class="kt">int</span> <span class="n">max_rsp</span><span class="p">,</span> <span class="k">const</span> <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">lap</span><span class="p">,</span> 
+<span class="lineno">2</span>                 <span class="n">inquiry_info</span> <span class="o">**</span><span class="n">ii</span><span class="p">,</span> <span class="kt">long</span> <span class="n">flags</span><span class="p">);</span>
+</code></pre>
+</div>
+
+
+hci_inquiry is one of the few functions that requires the use of a resource number instead of an open socket, so we use the dev_id returned by hci_get_route. The inquiry lasts for at most 1.28 * len seconds, and at most max_rsp devices will be returned in the output parameter ii, which must be large enough to accommodate max_rsp results. We suggest using a max_rsp of 255 for a standard 10.24 second inquiry.
+
+If flags is set to IREQ_CACHE_FLUSH, then the cache of previously detected devices is flushed before performing the current inquiry. Otherwise, if flags is set to 0, then the results of previous inquiries may be returned, even if the devices aren't in range anymore.
+
+The inquiry_info structure is defined as
+
+<div class="highlight"><pre><code class="c"><span class="lineno">1</span> <span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+<span class="lineno">2</span>     <span class="kt">bdaddr_t</span>    <span class="n">bdaddr</span><span class="p">;</span>
+<span class="lineno">3</span>     <span class="kt">uint8_t</span>     <span class="n">pscan_rep_mode</span><span class="p">;</span>
+<span class="lineno">4</span>     <span class="kt">uint8_t</span>     <span class="n">pscan_period_mode</span><span class="p">;</span>
+<span class="lineno">5</span>     <span class="kt">uint8_t</span>     <span class="n">pscan_mode</span><span class="p">;</span>
+<span class="lineno">6</span>     <span class="kt">uint8_t</span>     <span class="n">dev_class</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+<span class="lineno">7</span>     <span class="kt">uint16_t</span>    <span class="n">clock_offset</span><span class="p">;</span>
+<span class="lineno">8</span> <span class="p">}</span> <span class="n">__attribute__</span> <span class="p">((</span><span class="n">packed</span><span class="p">))</span> <span class="n">inquiry_info</span><span class="p">;</span>
+</code></pre>
+</div>
+
+
+For the most part, only the first entry - the bdaddr field, which gives the address of the detected device - is of any use. Occasionally, there may be a use for the dev_class field, which gives information about the type of device detected (i.e. if it's a printer, phone, desktop computer, etc.) and is described in the Bluetooth Assigned Numbers [3]. The rest of the fields are used for low level communication, and are not useful for most purposes. The interested reader can see the Bluetooth Core Specification [4] for more details.
+
+Once a list of nearby Bluetooth devices and their addresses has been found, the program determines the user-friendly names associated with those addresses and presents them to the user. The hci_read_remote_name function is used for this purpose.
+
+<div class="highlight"><pre><code class="c"><span class="lineno">1</span> <span class="kt">int</span> <span class="n">hci_read_remote_name</span><span class="p">(</span><span class="kt">int</span> <span class="n">sock</span><span class="p">,</span> <span class="k">const</span> <span class="kt">bdaddr_t</span> <span class="o">*</span><span class="n">ba</span><span class="p">,</span> <span class="kt">int</span> <span class="n">len</span><span class="p">,</span> 
+<span class="lineno">2</span>                          <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="kt">int</span> <span class="n">timeout</span><span class="p">)</span>
+</code></pre>
+</div>
+
+
+hci_read_remote_name tries for at most timeout milliseconds to use the socket sock to query the user-friendly name of the device with Bluetooth address ba. On success, hci_read_remote_name returns 0 and copies at most the first len bytes of the device's user-friendly name into name. On failure, it returns -1 and sets errno accordingly.
+Notes
+[1] 
+
+http://www.bluez.org/lists.html
+[2] 
+
+for the curious, it makes a call to socket(AF_BLUETOOTH, SOCK_RAW, BTPROTO_HCI), followed by a call to bind with the specified resource number.
+[3] 
+
+https://www.bluetooth.org/foundry/assignnumb/document/baseband
+[4] 
+
+http://www.bluetooth.org/spec
+
           <div class="section-nav">
   <div class="left align-right">
     
