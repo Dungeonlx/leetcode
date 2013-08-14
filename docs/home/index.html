@@ -122,104 +122,117 @@
       <div class="unit four-fifths">
         <article>
           <h1>使用BlueZ用C语言开发蓝牙程序</h1>
-          Bluetooth programming in C with BlueZ
+          <h2>选择一个通讯搭档</h2>
 
-There are reasons to prefer developing Bluetooth applications in C instead of in a high level language such as Python. The Python environment might not be available or might not fit on the target device; strict application requirements on program size, speed, and memory usage may preclude the use of an interpreted language like Python; the programmer may desire finer control over the local Bluetooth adapter than PyBluez provides; or the project may be to create a shared library for other applications to link against instead of a standalone application. As of this writing, BlueZ is a powerful Bluetooth communications stack with extensive APIs that allows a user to fully exploit all local Bluetooth resources, but it has no official documentation. Furthermore, there is very little unofficial documentation as well. Novice developers requesting documentation on the official mailing lists [1] are typically rebuffed and told to figure out the API by reading through the BlueZ source code. This is a time consuming process that can only reveal small pieces of information at a time, and is quite often enough of an obstacle to deter many potential developers.
+<p>一个简单的程序——识别附近的蓝牙设备。程序获取系统蓝牙资源，扫描附近的蓝牙设备
+，然后查看设备的名称。</p>
 
-This chapter presents a short introduction to developing Bluetooth applications in C with BlueZ. The tasks covered in chapter 2 are now explained in greater detail here for C programmers.
-4.1. Choosing a communication partner
+<p>simplescan.c</p>
+<div class="highlight"><pre><code class="c"><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="cp">#include &lt;unistd.h&gt;</span>
+<span class="cp">#include &lt;sys/socket.h&gt;</span>
+<span class="cp">#include &lt;bluetooth/bluetooth.h&gt;</span>
+<span class="cp">#include &lt;bluetooth/hci.h&gt;</span>
+<span class="cp">#include &lt;bluetooth/hci_lib.h&gt;</span>
 
-A simple program that detects nearby Bluetooth devices is shown in Example 4-1. The program reserves system Bluetooth resources, scans for nearby Bluetooth devices, and then looks up the user friendly name for each detected device. A more detailed explanation of the data structures and functions used follows.
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+    <span class="n">inquiry_info</span> <span class="o">*</span><span class="n">ii</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">max_rsp</span><span class="p">,</span> <span class="n">num_rsp</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">dev_id</span><span class="p">,</span> <span class="n">sock</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">flags</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="n">addr</span><span class="p">[</span><span class="mi">19</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+    <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">248</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
 
-Example 4-1. simplescan.c
-<div class="highlight"><pre><code class="c"><span class="lineno"> 1</span> <span class="cp">#include &lt;stdio.h&gt;</span>
-<span class="lineno"> 2</span> <span class="cp">#include &lt;stdlib.h&gt;</span>
-<span class="lineno"> 3</span> <span class="cp">#include &lt;unistd.h&gt;</span>
-<span class="lineno"> 4</span> <span class="cp">#include &lt;sys/socket.h&gt;</span>
-<span class="lineno"> 5</span> <span class="cp">#include &lt;bluetooth/bluetooth.h&gt;</span>
-<span class="lineno"> 6</span> <span class="cp">#include &lt;bluetooth/hci.h&gt;</span>
-<span class="lineno"> 7</span> <span class="cp">#include &lt;bluetooth/hci_lib.h&gt;</span>
-<span class="lineno"> 8</span> 
-<span class="lineno"> 9</span> <span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
-<span class="lineno">10</span> <span class="p">{</span>
-<span class="lineno">11</span>     <span class="n">inquiry_info</span> <span class="o">*</span><span class="n">ii</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-<span class="lineno">12</span>     <span class="kt">int</span> <span class="n">max_rsp</span><span class="p">,</span> <span class="n">num_rsp</span><span class="p">;</span>
-<span class="lineno">13</span>     <span class="kt">int</span> <span class="n">dev_id</span><span class="p">,</span> <span class="n">sock</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">flags</span><span class="p">;</span>
-<span class="lineno">14</span>     <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
-<span class="lineno">15</span>     <span class="kt">char</span> <span class="n">addr</span><span class="p">[</span><span class="mi">19</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">0</span> <span class="p">};</span>
-<span class="lineno">16</span>     <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">248</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">0</span> <span class="p">};</span>
-<span class="lineno">17</span> 
-<span class="lineno">18</span>     <span class="n">dev_id</span> <span class="o">=</span> <span class="n">hci_get_route</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
-<span class="lineno">19</span>     <span class="n">sock</span> <span class="o">=</span> <span class="n">hci_open_dev</span><span class="p">(</span> <span class="n">dev_id</span> <span class="p">);</span>
-<span class="lineno">20</span>     <span class="k">if</span> <span class="p">(</span><span class="n">dev_id</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">sock</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-<span class="lineno">21</span>         <span class="n">perror</span><span class="p">(</span><span class="s">&quot;opening socket&quot;</span><span class="p">);</span>
-<span class="lineno">22</span>         <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-<span class="lineno">23</span>     <span class="p">}</span>
-<span class="lineno">24</span> 
-<span class="lineno">25</span>     <span class="n">len</span>  <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
-<span class="lineno">26</span>     <span class="n">max_rsp</span> <span class="o">=</span> <span class="mi">255</span><span class="p">;</span>
-<span class="lineno">27</span>     <span class="n">flags</span> <span class="o">=</span> <span class="n">IREQ_CACHE_FLUSH</span><span class="p">;</span>
-<span class="lineno">28</span>     <span class="n">ii</span> <span class="o">=</span> <span class="p">(</span><span class="n">inquiry_info</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="n">max_rsp</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">inquiry_info</span><span class="p">));</span>
-<span class="lineno">29</span>     
-<span class="lineno">30</span>     <span class="n">num_rsp</span> <span class="o">=</span> <span class="n">hci_inquiry</span><span class="p">(</span><span class="n">dev_id</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">max_rsp</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ii</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
-<span class="lineno">31</span>     <span class="k">if</span><span class="p">(</span> <span class="n">num_rsp</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="n">perror</span><span class="p">(</span><span class="s">&quot;hci_inquiry&quot;</span><span class="p">);</span>
-<span class="lineno">32</span> 
-<span class="lineno">33</span>     <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">num_rsp</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-<span class="lineno">34</span>         <span class="n">ba2str</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">ii</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">bdaddr</span><span class="p">,</span> <span class="n">addr</span><span class="p">);</span>
-<span class="lineno">35</span>         <span class="n">memset</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">name</span><span class="p">));</span>
-<span class="lineno">36</span>         <span class="k">if</span> <span class="p">(</span><span class="n">hci_read_remote_name</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="o">&amp;</span><span class="p">(</span><span class="n">ii</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">bdaddr</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> 
-<span class="lineno">37</span>             <span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
-<span class="lineno">38</span>         <span class="n">strcpy</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s">&quot;[unknown]&quot;</span><span class="p">);</span>
-<span class="lineno">39</span>         <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s  %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">addr</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
-<span class="lineno">40</span>     <span class="p">}</span>
-<span class="lineno">41</span> 
-<span class="lineno">42</span>     <span class="n">free</span><span class="p">(</span> <span class="n">ii</span> <span class="p">);</span>
-<span class="lineno">43</span>     <span class="n">close</span><span class="p">(</span> <span class="n">sock</span> <span class="p">);</span>
-<span class="lineno">44</span>     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="lineno">45</span> <span class="p">}</span>
+    <span class="n">dev_id</span> <span class="o">=</span> <span class="n">hci_get_route</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
+    <span class="n">sock</span> <span class="o">=</span> <span class="n">hci_open_dev</span><span class="p">(</span><span class="n">dev_id</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">dev_id</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">sock</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">perror</span><span class="p">(</span><span class="s">&quot;opening socket&quot;</span><span class="p">);</span>
+        <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">len</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+    <span class="n">max_rsp</span> <span class="o">=</span> <span class="mi">255</span><span class="p">;</span>
+    <span class="n">flags</span> <span class="o">=</span> <span class="n">IREQ_CACHE_FLUSH</span><span class="p">;</span>
+    <span class="n">ii</span> <span class="o">=</span> <span class="p">(</span><span class="n">inquiry_info</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="n">max_rsp</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">inquiry_info</span><span class="p">));</span>
+    
+    <span class="n">num_rsp</span> <span class="o">=</span> <span class="n">hci_inquiry</span><span class="p">(</span><span class="n">dev_id</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">max_rsp</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">ii</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">num_rsp</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> 
+        <span class="n">perror</span><span class="p">(</span><span class="s">&quot;hci_inquiry&quot;</span><span class="p">);</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">num_rsp</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">ba2str</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">ii</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">bdaddr</span><span class="p">,</span> <span class="n">addr</span><span class="p">);</span>
+        <span class="n">memset</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">name</span><span class="p">));</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">hci_read_remote_name</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="o">&amp;</span><span class="p">(</span><span class="n">ii</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">bdaddr</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> 
+            <span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">strcpy</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s">&quot;[unknown]&quot;</span><span class="p">);</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s  %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">addr</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">free</span><span class="p">(</span><span class="n">ii</span><span class="p">);</span>
+    <span class="n">ii</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="n">close</span><span class="p">(</span><span class="n">sock</span><span class="p">);</span>
+    <span class="n">sock</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
 </div>
 
 
-4.1.1. Compilation
+<h3>用scons编译</h3>
 
-To compile our program, invoke gcc and link against libbluetooth
-
-# gcc -o simplescan simplescan.c -lbluetooth
-4.1.2. Explanation
-
-<div class="highlight"><pre><code class="c"><span class="lineno">1</span> <span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
-<span class="lineno">2</span>     <span class="kt">uint8_t</span> <span class="n">b</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
-<span class="lineno">3</span> <span class="p">}</span> <span class="n">__attribute__</span><span class="p">((</span><span class="n">packed</span><span class="p">))</span> <span class="kt">bdaddr_t</span><span class="p">;</span>
+<div class="highlight"><pre><code class="python"><span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">CCFLAGS</span><span class="o">=</span><span class="s">&#39;-g&#39;</span><span class="p">)</span>                                                 
+<span class="n">env</span><span class="o">.</span><span class="n">ParseConfig</span><span class="p">(</span><span class="s">&#39;pkg-config --cflags --libs bluez&#39;</span><span class="p">)</span>                             
+                                                                                
+<span class="n">env</span><span class="o">.</span><span class="n">Program</span><span class="p">(</span><span class="s">&#39;simplescan.c&#39;</span><span class="p">)</span>
 </code></pre>
 </div>
 
 
-The basic data structure used to specify a Bluetooth device address is the bdaddr_t. All Bluetooth addresses in BlueZ will be stored and manipulated as bdaddr_t structures. BlueZ provides two convenience functions to convert between strings and bdaddr_t structures.
+<p>$ scons</p>
 
-<div class="highlight"><pre><code class="c"><span class="lineno">1</span> <span class="kt">int</span> <span class="nf">str2ba</span><span class="p">(</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">str</span><span class="p">,</span> <span class="kt">bdaddr_t</span> <span class="o">*</span><span class="n">ba</span> <span class="p">);</span>
-<span class="lineno">2</span> <span class="kt">int</span> <span class="nf">ba2str</span><span class="p">(</span> <span class="k">const</span> <span class="kt">bdaddr_t</span> <span class="o">*</span><span class="n">ba</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">str</span> <span class="p">);</span>
+<h3>解释</h3>
+
+<div class="highlight"><pre><code class="c"><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+    <span class="kt">uint8_t</span> <span class="n">b</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
+<span class="p">}</span> <span class="n">__attribute__</span><span class="p">((</span><span class="n">packed</span><span class="p">))</span> <span class="kt">bdaddr_t</span><span class="p">;</span>
 </code></pre>
 </div>
 
 
-str2ba takes an string of the form XX:XX:XX:XX:XX:XX, where each XX is a hexadecimal number specifying an octet of the 48-bit address, and packs it into a 6-byte bdaddr_t. ba2str does exactly the opposite.
+<p>用来表示一个蓝牙设备地址的基本数据结构是bdaddr_t。所有BlueZ的蓝牙地址都存储
+在bdaddr_t结构体中。BlueZ提供两个函数用来字符与bdaddr_t结构体的互相转换。</p>
 
-Local Bluetooth adapters are assigned identifying numbers starting with 0, and a program must specify which adapter to use when allocating system resources. Usually, there is only one adapter or it doesn't matter which one is used, so passing NULL to hci_get_route will retrieve the resource number of the first available Bluetooth adapter.
+<div class="highlight"><pre><code class="c"><span class="kt">int</span> <span class="nf">str2ba</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">str</span><span class="p">,</span> <span class="kt">bdaddr_t</span> <span class="o">*</span><span class="n">ba</span><span class="p">);</span>
+<span class="kt">int</span> <span class="nf">ba2str</span><span class="p">(</span><span class="k">const</span> <span class="kt">bdaddr_t</span> <span class="o">*</span><span class="n">ba</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">str</span><span class="p">);</span>
+</code></pre>
+</div>
 
-<div class="highlight"><pre><code class="c"><span class="lineno">1</span> <span class="kt">int</span> <span class="nf">hci_get_route</span><span class="p">(</span> <span class="kt">bdaddr_t</span> <span class="o">*</span><span class="n">bdaddr</span> <span class="p">);</span>
-<span class="lineno">2</span> <span class="kt">int</span> <span class="nf">hci_open_dev</span><span class="p">(</span> <span class="kt">int</span> <span class="n">dev_id</span> <span class="p">);</span>
+
+<p>str2ba将XX:XX:XX:XX:XX:XX格式的字符串转换成6字节的bdaddr_t，其中XX是十六进制
+数，代表48位地址的8位。ba2str实现相反的功能。</p>
+
+<p>本地蓝牙适配器用0开始的数字标识，当分配系统资源时，一个程序必须指定是哪一个
+适配器在使用。通常的，只有一个适配器或者无所谓哪一个在用，所以传递NULL指针给
+hci_get_route将获得第一个可使用的蓝牙适配器的资源。</p>
+
+<div class="highlight"><pre><code class="c"><span class="kt">int</span> <span class="nf">hci_get_route</span><span class="p">(</span><span class="kt">bdaddr_t</span> <span class="o">*</span><span class="n">bdaddr</span><span class="p">);</span>
+<span class="kt">int</span> <span class="nf">hci_open_dev</span><span class="p">(</span><span class="kt">int</span> <span class="n">dev_id</span><span class="p">);</span>
 </code></pre>
 </div>
 
 
 Note    
 
-It is not a good idea to hard-code the device number 0, because that is not always the id of the first adapter. For example, if there were two adapters on the system and the first adapter (id 0) is disabled, then the first available adapter is the one with id 1.
+<p>把设备号写死0不好，因为第一个适配器不一定id是0。比如，如果系统有两个适配器，
+而且第一个适配器（id 0）禁用了，那么第一个可使用的适配器的id就是1。</p>
 
-If there are multiple Bluetooth adapters present, then to choose the adapter with address 01:23:45:67:89:AB, pass the char * representation of the address to hci_devid and use that in place of hci_get_route.
+<p>如果当前有多个蓝牙适配器，选择地址为01:23:45:67:89:AB的适配器，传递char *
+指针地址给hci_devid，在hci_get_route中使用它的返回值。</p>
 
-<div class="highlight"><pre><code class="c"><span class="lineno">1</span> <span class="kt">int</span> <span class="n">dev_id</span> <span class="o">=</span> <span class="n">hci_devid</span><span class="p">(</span> <span class="s">&quot;01:23:45:67:89:AB&quot;</span> <span class="p">);</span>
+<div class="highlight"><pre><code class="c"><span class="kt">int</span> <span class="n">dev_id</span> <span class="o">=</span> <span class="n">hci_devid</span><span class="p">(</span><span class="s">&quot;01:23:45:67:89:AB&quot;</span><span class="p">);</span>
 </code></pre>
 </div>
 
@@ -240,14 +253,14 @@ If flags is set to IREQ_CACHE_FLUSH, then the cache of previously detected devic
 
 The inquiry_info structure is defined as
 
-<div class="highlight"><pre><code class="c"><span class="lineno">1</span> <span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
-<span class="lineno">2</span>     <span class="kt">bdaddr_t</span>    <span class="n">bdaddr</span><span class="p">;</span>
-<span class="lineno">3</span>     <span class="kt">uint8_t</span>     <span class="n">pscan_rep_mode</span><span class="p">;</span>
-<span class="lineno">4</span>     <span class="kt">uint8_t</span>     <span class="n">pscan_period_mode</span><span class="p">;</span>
-<span class="lineno">5</span>     <span class="kt">uint8_t</span>     <span class="n">pscan_mode</span><span class="p">;</span>
-<span class="lineno">6</span>     <span class="kt">uint8_t</span>     <span class="n">dev_class</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
-<span class="lineno">7</span>     <span class="kt">uint16_t</span>    <span class="n">clock_offset</span><span class="p">;</span>
-<span class="lineno">8</span> <span class="p">}</span> <span class="n">__attribute__</span> <span class="p">((</span><span class="n">packed</span><span class="p">))</span> <span class="n">inquiry_info</span><span class="p">;</span>
+<div class="highlight"><pre><code class="c"><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+    <span class="kt">bdaddr_t</span>    <span class="n">bdaddr</span><span class="p">;</span>
+    <span class="kt">uint8_t</span>     <span class="n">pscan_rep_mode</span><span class="p">;</span>
+    <span class="kt">uint8_t</span>     <span class="n">pscan_period_mode</span><span class="p">;</span>
+    <span class="kt">uint8_t</span>     <span class="n">pscan_mode</span><span class="p">;</span>
+    <span class="kt">uint8_t</span>     <span class="n">dev_class</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+    <span class="kt">uint16_t</span>    <span class="n">clock_offset</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">__attribute__</span> <span class="p">((</span><span class="n">packed</span><span class="p">))</span> <span class="n">inquiry_info</span><span class="p">;</span>
 </code></pre>
 </div>
 

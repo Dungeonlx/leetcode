@@ -5,17 +5,13 @@ next_section: quickstart
 permalink: /home/
 ---
 
-Bluetooth programming in C with BlueZ
+<h2>选择一个通讯搭档</h2>
 
-There are reasons to prefer developing Bluetooth applications in C instead of in a high level language such as Python. The Python environment might not be available or might not fit on the target device; strict application requirements on program size, speed, and memory usage may preclude the use of an interpreted language like Python; the programmer may desire finer control over the local Bluetooth adapter than PyBluez provides; or the project may be to create a shared library for other applications to link against instead of a standalone application. As of this writing, BlueZ is a powerful Bluetooth communications stack with extensive APIs that allows a user to fully exploit all local Bluetooth resources, but it has no official documentation. Furthermore, there is very little unofficial documentation as well. Novice developers requesting documentation on the official mailing lists [1] are typically rebuffed and told to figure out the API by reading through the BlueZ source code. This is a time consuming process that can only reveal small pieces of information at a time, and is quite often enough of an obstacle to deter many potential developers.
+<p>一个简单的程序——识别附近的蓝牙设备。程序获取系统蓝牙资源，扫描附近的蓝牙设备
+，然后查看设备的名称。</p>
 
-This chapter presents a short introduction to developing Bluetooth applications in C with BlueZ. The tasks covered in chapter 2 are now explained in greater detail here for C programmers.
-4.1. Choosing a communication partner
-
-A simple program that detects nearby Bluetooth devices is shown in Example 4-1. The program reserves system Bluetooth resources, scans for nearby Bluetooth devices, and then looks up the user friendly name for each detected device. A more detailed explanation of the data structures and functions used follows.
-
-Example 4-1. simplescan.c
-{% highlight c linenos %}
+<p>simplescan.c</p>
+{% highlight c %}
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -24,29 +20,30 @@ Example 4-1. simplescan.c
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_lib.h>
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
     inquiry_info *ii = NULL;
     int max_rsp, num_rsp;
     int dev_id, sock, len, flags;
     int i;
-    char addr[19] = { 0 };
-    char name[248] = { 0 };
+    char addr[19] = {0};
+    char name[248] = {0};
 
     dev_id = hci_get_route(NULL);
-    sock = hci_open_dev( dev_id );
+    sock = hci_open_dev(dev_id);
     if (dev_id < 0 || sock < 0) {
         perror("opening socket");
         exit(1);
     }
 
-    len  = 8;
+    len = 8;
     max_rsp = 255;
     flags = IREQ_CACHE_FLUSH;
     ii = (inquiry_info*)malloc(max_rsp * sizeof(inquiry_info));
     
     num_rsp = hci_inquiry(dev_id, len, max_rsp, NULL, &ii, flags);
-    if( num_rsp < 0 ) perror("hci_inquiry");
+    if (num_rsp < 0) 
+        perror("hci_inquiry");
 
     for (i = 0; i < num_rsp; i++) {
         ba2str(&(ii+i)->bdaddr, addr);
@@ -57,49 +54,64 @@ int main(int argc, char **argv)
         printf("%s  %s\n", addr, name);
     }
 
-    free( ii );
-    close( sock );
+    free(ii);
+    ii = NULL;
+    close(sock);
+    sock = -1;
+
     return 0;
 }
 {% endhighlight %}
 
-4.1.1. Compilation
+<h3>用scons编译</h3>
 
-To compile our program, invoke gcc and link against libbluetooth
+{% highlight python %}
+env = Environment(CCFLAGS='-g')                                                 
+env.ParseConfig('pkg-config --cflags --libs bluez')                             
+                                                                                
+env.Program('simplescan.c')
+{% endhighlight %}
 
-# gcc -o simplescan simplescan.c -lbluetooth
-4.1.2. Explanation
+<p>$ scons</p>
 
-{% highlight c linenos %}
+<h3>解释</h3>
+
+{% highlight c %}
 typedef struct {
     uint8_t b[6];
 } __attribute__((packed)) bdaddr_t;
 {% endhighlight %}
 
-The basic data structure used to specify a Bluetooth device address is the bdaddr_t. All Bluetooth addresses in BlueZ will be stored and manipulated as bdaddr_t structures. BlueZ provides two convenience functions to convert between strings and bdaddr_t structures.
+<p>用来表示一个蓝牙设备地址的基本数据结构是bdaddr_t。所有BlueZ的蓝牙地址都存储
+在bdaddr_t结构体中。BlueZ提供两个函数用来字符与bdaddr_t结构体的互相转换。</p>
 
-{% highlight c linenos %}
-int str2ba( const char *str, bdaddr_t *ba );
-int ba2str( const bdaddr_t *ba, char *str );
+{% highlight c %}
+int str2ba(const char *str, bdaddr_t *ba);
+int ba2str(const bdaddr_t *ba, char *str);
 {% endhighlight %}
 
-str2ba takes an string of the form XX:XX:XX:XX:XX:XX, where each XX is a hexadecimal number specifying an octet of the 48-bit address, and packs it into a 6-byte bdaddr_t. ba2str does exactly the opposite.
+<p>str2ba将XX:XX:XX:XX:XX:XX格式的字符串转换成6字节的bdaddr_t，其中XX是十六进制
+数，代表48位地址的8位。ba2str实现相反的功能。</p>
 
-Local Bluetooth adapters are assigned identifying numbers starting with 0, and a program must specify which adapter to use when allocating system resources. Usually, there is only one adapter or it doesn't matter which one is used, so passing NULL to hci_get_route will retrieve the resource number of the first available Bluetooth adapter.
+<p>本地蓝牙适配器用0开始的数字标识，当分配系统资源时，一个程序必须指定是哪一个
+适配器在使用。通常的，只有一个适配器或者无所谓哪一个在用，所以传递NULL指针给
+hci_get_route将获得第一个可使用的蓝牙适配器的资源。</p>
 
-{% highlight c linenos %}
-int hci_get_route( bdaddr_t *bdaddr );
-int hci_open_dev( int dev_id );
+{% highlight c %}
+int hci_get_route(bdaddr_t *bdaddr);
+int hci_open_dev(int dev_id);
 {% endhighlight %}
 
 Note    
 
-It is not a good idea to hard-code the device number 0, because that is not always the id of the first adapter. For example, if there were two adapters on the system and the first adapter (id 0) is disabled, then the first available adapter is the one with id 1.
+<p>把设备号写死0不好，因为第一个适配器不一定id是0。比如，如果系统有两个适配器，
+而且第一个适配器（id 0）禁用了，那么第一个可使用的适配器的id就是1。</p>
 
-If there are multiple Bluetooth adapters present, then to choose the adapter with address 01:23:45:67:89:AB, pass the char * representation of the address to hci_devid and use that in place of hci_get_route.
+<p>如果当前有多个蓝牙适配器，选择地址为01:23:45:67:89:AB的适配器，传递char *
+指针地址给hci_devid，在hci_get_route中使用它的返回值。</p>
 
-{% highlight c linenos %}
-int dev_id = hci_devid( "01:23:45:67:89:AB" );
+{% highlight c %}
+int dev_id = hci_devid("01:23:45:67:89:AB");
 {% endhighlight %}
 
 Most Bluetooth operations require the use of an open socket. hci_open_dev is a convenience function that opens a Bluetooth socket with the specified resource number [2]. To be clear, the socket opened by hci_open_dev represents a connection to the microcontroller on the specified local Bluetooth adapter, and not a connection to a remote Bluetooth device. Performing low level Bluetooth operations involves sending commands directly to the microcontroller with this socket, and Section 4.5 discusses this in greater detail.
@@ -117,7 +129,7 @@ If flags is set to IREQ_CACHE_FLUSH, then the cache of previously detected devic
 
 The inquiry_info structure is defined as
 
-{% highlight c linenos %}
+{% highlight c %}
 typedef struct {
     bdaddr_t    bdaddr;
     uint8_t     pscan_rep_mode;
