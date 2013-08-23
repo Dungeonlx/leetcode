@@ -20,14 +20,14 @@ permalink: /home/
     <p>有两种方法来遍历一个图。你还记得是哪<a href="http://zh.wikipedia.org/zh-cn/%E5%9B%BE%E9%81%8D%E5%8E%86" target="_blank">两种</a>吗？你能判断这个图是<a href="http://zh.wikipedia.org/zh-cn/%E5%9B%BE" target="_blank">有向图还是无向图</a>吗？</p>
 </div>
 
-leetcode.com提供的答案
-有两种方法来遍历一个图：广度优先、<a href="http://www.shendu.com" target="_blank">深度</a>优先。先尝试广度优先，需要一个队列。
+<p>leetcode.com提供的答案
+有两种方法来遍历一个图：广度优先、<a href="http://www.shendu.com" target="_blank">深度</a>优先。先尝试广度优先，需要一个队列。</p>
 
-广度优先的遍历是怎么鼓捣的？从队列里弹出一个节点，拷贝这个节点的全部邻居，再把这些邻居插入队列。
+<p>广度优先的遍历是怎么鼓捣的？从队列里弹出一个节点，拷贝这个节点的全部邻居，再把这些邻居插入队列。</p>
 
-A straight forward breadth-first traversal seemed to work. But some details are still missing. For example, how do we connect the nodes of the cloned graph?
+<p>广度优先的遍历貌似可行。但是漏了某些细节。比如，我们如何连接克隆图的节点？</p>
 
-Before we continue, we first need to make sure if the graph is directed or not. If you notice how Node is defined above, it is quite obvious that the graph is a directed graph. Why?
+<p>我们首先要确认图是否是有向的。如果你注意到Node是如何定义的，显而易见该图是有向图。为什么？</p>
 
 For example, A can have a neighbor called B. Therefore, we may traverse from A to B. An undirected graph implies that B can always traverse back to A. Is it true here? No, because whether B could traverse back to A depends if one of B’s neighbor is A.
 
