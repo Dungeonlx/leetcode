@@ -9,7 +9,7 @@ permalink: /home/
     <p>克隆一个图。输入的是一个Node指针。返回值是被克隆的图的Node指针。</p>
 
     <p>一个图的结构体定义如下：</p>
-    {% highlight cpp linenos %}
+    {% highlight cpp %}
     struct Node {
         std::vector neighbors;
     }
@@ -20,22 +20,57 @@ permalink: /home/
     <p>有两种方法来遍历一个图。你还记得是哪<a href="http://zh.wikipedia.org/zh-cn/%E5%9B%BE%E9%81%8D%E5%8E%86" target="_blank">两种</a>吗？你能判断这个图是<a href="http://zh.wikipedia.org/zh-cn/%E5%9B%BE" target="_blank">有向图还是无向图</a>吗？</p>
 </div>
 
-<p>leetcode.com提供的答案
-有两种方法来遍历一个图：广度优先、<a href="http://www.shendu.com" target="_blank">深度</a>优先。先尝试广度优先，需要一个队列。</p>
+<p><a href="http://leetcode.com/2012/05/clone-graph-part-i.html" target="_blank">leetcode.com提供的答案</a>：有两种方法来遍历一个图：广度优先、<a href="http://www.shendu.com" target="_blank">深度</a>优先。先尝试广度优先，需要一个队列。</p>
 
 <p>广度优先的遍历是怎么鼓捣的？从队列里弹出一个节点，拷贝这个节点的全部邻居，再把这些邻居插入队列。</p>
 
-<p>广度优先的遍历貌似可行。但是漏了某些细节。比如，我们如何连接克隆图的节点？</p>
+<p>广度优先的遍历貌似可行。但是遗漏了某些细节。比如，我们如何连接克隆图的节点？</p>
 
 <p>我们首先要确认图是否是有向的。如果你注意到Node是如何定义的，显而易见该图是有向图。为什么？</p>
 
-For example, A can have a neighbor called B. Therefore, we may traverse from A to B. An undirected graph implies that B can always traverse back to A. Is it true here? No, because whether B could traverse back to A depends if one of B’s neighbor is A.
+<p>例如，A有个邻居B。那么，我们可以从A遍历到B。一个无向图意味着B可以遍历回到A。是真的吗？不，因为B是否能遍历回到A，取决于B有个邻居是A。</p>
 
-The fact that B can traverse back to A implies that the graph may contain a cycle. You must take extra care to handle this case. Imagine that you finished implementing without considering this case, and later being pointed out by your interviewer that your code has an infinite loop, yuck!
+<p>B可以遍历回到A意味着图可能包含一个环。必须谨慎处理这种情况。假如你完成了面试题但却忘了考虑这个情况，面试官随后就会指出你的代码中有一个死循环，讨厌～～～</p>
 
-Let’s analyze this further by using the below example:
+<p>举例分析如下：</p>
 
-A simple graph
-Assume that the starting point of the graph is A. First, you make a copy of node A (A2), and found that A has only one neighbor B. You make a copy of B (B2) and connects A2->B2 by pushing B2 as A2′s neighbor. Next, you find that B has A as neighbor, which you have already made a copy of. Here, we have to be careful not to make a copy of A again, but to connect B2->A2 by pushing A2 as B2′s neighbor. But, how do we know if a node has already been copied?
+<img src="{{ site.url }}/img/simple_graph.png" alt="简单图">
 
-Easy, we could use a hash table! As we copy a node, we insert it into the table. If we later find that one of a node’s neighbor is already in the table, we do not make a copy of that neighbor, but to push its neighbor’s copy to its copy instead. Therefore, the hash table would need to store a mapping of key-value pairs, where the key is a node in the original graph and its value is the node’s copy.
+<p>假设图的起点是A。首先，复制节点A(A2)，发现A只有一个邻居B。复制B(B2)，插入B2作为A2的邻居，连接了A2->B2。接下来，发现B有个邻居A，而A已经有个副本。这里，我们要注意不能再复制A，插入A2作为B2的邻居，连接B2->A2。但是，我们怎么知道一个节点已经被复制了呢？</p>
+
+<p>简单，可以使用hash表！复制一个节点，就把它插入hash表。如果发现节点的某一个邻居已经在hash表里了，就不需要复制那个邻居，而是使用邻居的副本替代节点的副本。hash表存储key-value映射，key是原图里的节点，value是节点的副本。</p>
+
+{% highlight cpp %}
+typedef unordered_map<Node *, Node *> Map;
+ 
+Node *clone(Node *graph) {
+    if (!graph) return NULL;
+ 
+    Map map;
+    queue<Node *> q;
+    q.push(graph);
+ 
+    Node *graphCopy = new Node();
+    map[graph] = graphCopy;
+ 
+    while (!q.empty()) {
+        Node *node = q.front();
+        q.pop();
+        int n = node->neighbors.size();
+        for (int i = 0; i < n; i++) {
+            Node *neighbor = node->neighbors[i];
+            // 没有该副本
+            if (map.find(neighbor) == map.end()) {
+                Node *p = new Node();
+                map[node]->neighbors.push_back(p);
+                map[neighbor] = p;
+                q.push(neighbor);
+            } else {     // 副本已经存在
+                map[node]->neighbors.push_back(map[neighbor]);
+            }
+        }
+    }
+ 
+    return graphCopy;
+}
+{% endhighlight %}
