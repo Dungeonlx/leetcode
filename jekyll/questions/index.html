@@ -74,3 +74,54 @@ Node *clone(Node *graph) {
     return graphCopy;
 }
 {% endhighlight %}
+
+<div class="note info">                                                         
+    <p>LeetCode.cn更希望提供真实的可编译运行的C++ 0x11<a href="https://raw.github.com/xiangzhai/leetcode/master/clonegraph/clonegraph.cpp" target="_blank">源代码</a></p>        
+                                                                                
+    <p>首先一个图的节点的结构体定义如下：</p>                                             
+    {% highlight cpp %}                                                         
+    template<typename T> class graph_node                                           
+	{                                                                               
+	public:                                                                         
+    	graph_node() {}                                                             
+    	graph_node(T data) :m_data(data) {}                                         
+    	~graph_node() {}                                                            
+                                                                                
+	public:                                                                         
+    	std::vector<graph_node<T>*> neighbors;                                      
+    	T get_data() { return m_data; }                                             
+                                                                                
+	private:                                                                        
+    	T m_data;                                                                   
+	};                                                                          
+    {% endhighlight %}                                                          
+</div>
+
+<p>一个图的节点不仅包含结构std::vector<graph_node<T>*> neighbors；同时也需要包含数据T m_data。这里使用template<typename T>模板类来支持多种数据类型。我们会为graph_node取个别名：</p>
+{% highlight cpp %}
+typedef graph_node<int> Node;
+{% endhighlight %}
+
+<p>LeetCode.com的原答案中没有考虑cleanup的事儿：</p>
+{% highlight cpp %}
+static void m_cleanup()                                                         
+{                                                                               
+    MapIter iter;                                                               
+    int i;                                                                      
+                                                                                
+    for (iter = map.begin(); iter != map.end(); iter++)                         
+    {                                                                           
+        for (i = 0; i < (*iter).second->neighbors.size(); i++)                  
+        {                                                                       
+            delete (*iter).second->neighbors[i];                                
+            (*iter).second->neighbors[i] = NULL;                                
+        }                                                                       
+    }                                                                           
+                                                                                
+    if (graphCopy)                                                              
+    {                                                                           
+        delete graphCopy;                                                       
+        graphCopy = NULL;                                                       
+    }                                                                           
+}
+{% endhighlight %}

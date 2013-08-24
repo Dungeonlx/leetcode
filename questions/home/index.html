@@ -151,6 +151,62 @@
 </div>
 
 
+<div class="note info">                                                         
+    <p>LeetCode.cn更希望提供真实的可编译运行的C++ 0x11<a href="https://raw.github.com/xiangzhai/leetcode/master/clonegraph/clonegraph.cpp" target="_blank">源代码</a></p>        
+                                                                                
+    <p>首先一个图的节点的结构体定义如下：</p>                                             
+    <div class="highlight"><pre><code class="cpp">                                                         
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span> <span class="k">class</span> <span class="nc">graph_node</span>                                           
+	<span class="p">{</span>                                                                               
+	<span class="k">public</span><span class="o">:</span>                                                                         
+    	<span class="n">graph_node</span><span class="p">()</span> <span class="p">{}</span>                                                             
+    	<span class="n">graph_node</span><span class="p">(</span><span class="n">T</span> <span class="n">data</span><span class="p">)</span> <span class="o">:</span><span class="n">m_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="p">{}</span>                                         
+    	<span class="o">~</span><span class="n">graph_node</span><span class="p">()</span> <span class="p">{}</span>                                                            
+                                                                                
+	<span class="k">public</span><span class="o">:</span>                                                                         
+    	<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">graph_node</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;*&gt;</span> <span class="n">neighbors</span><span class="p">;</span>                                      
+    	<span class="n">T</span> <span class="nf">get_data</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">m_data</span><span class="p">;</span> <span class="p">}</span>                                             
+                                                                                
+	<span class="k">private</span><span class="o">:</span>                                                                        
+    	<span class="n">T</span> <span class="n">m_data</span><span class="p">;</span>                                                                   
+	<span class="p">};</span>                                                                          
+    
+</code></pre>
+</div>
+                                                          
+</div>
+
+<p>一个图的节点不仅包含结构std::vector<graph_node<T>*> neighbors；同时也需要包含数据T m_data。这里使用template<typename T>模板类来支持多种数据类型。我们会为graph_node取个别名：</p>
+<div class="highlight"><pre><code class="cpp"><span class="k">typedef</span> <span class="n">graph_node</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">Node</span><span class="p">;</span>
+</code></pre>
+</div>
+
+
+<p>LeetCode.com的原答案中没有考虑cleanup的事儿：</p>
+<div class="highlight"><pre><code class="cpp"><span class="k">static</span> <span class="kt">void</span> <span class="nf">m_cleanup</span><span class="p">()</span>                                                         
+<span class="p">{</span>                                                                               
+    <span class="n">MapIter</span> <span class="n">iter</span><span class="p">;</span>                                                               
+    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>                                                                      
+                                                                                
+    <span class="k">for</span> <span class="p">(</span><span class="n">iter</span> <span class="o">=</span> <span class="n">map</span><span class="p">.</span><span class="n">begin</span><span class="p">();</span> <span class="n">iter</span> <span class="o">!=</span> <span class="n">map</span><span class="p">.</span><span class="n">end</span><span class="p">();</span> <span class="n">iter</span><span class="o">++</span><span class="p">)</span>                         
+    <span class="p">{</span>                                                                           
+        <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="p">(</span><span class="o">*</span><span class="n">iter</span><span class="p">).</span><span class="n">second</span><span class="o">-&gt;</span><span class="n">neighbors</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>                  
+        <span class="p">{</span>                                                                       
+            <span class="k">delete</span> <span class="p">(</span><span class="o">*</span><span class="n">iter</span><span class="p">).</span><span class="n">second</span><span class="o">-&gt;</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>                                
+            <span class="p">(</span><span class="o">*</span><span class="n">iter</span><span class="p">).</span><span class="n">second</span><span class="o">-&gt;</span><span class="n">neighbors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                                
+        <span class="p">}</span>                                                                       
+    <span class="p">}</span>                                                                           
+                                                                                
+    <span class="k">if</span> <span class="p">(</span><span class="n">graphCopy</span><span class="p">)</span>                                                              
+    <span class="p">{</span>                                                                           
+        <span class="k">delete</span> <span class="n">graphCopy</span><span class="p">;</span>                                                       
+        <span class="n">graphCopy</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>                                                       
+    <span class="p">}</span>                                                                           
+<span class="p">}</span>
+</code></pre>
+</div>
+
+
           <div class="section-nav">
   <div class="left align-right">
     
