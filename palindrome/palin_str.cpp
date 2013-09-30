@@ -17,12 +17,13 @@ std::string m_preProcess(std::string s)
 std::string longestPalindrome(std::string s) 
 {
     std::string T = m_preProcess(s);
+    std::cout << "PreProcessed: " << T << std::endl;
     int n = T.length();
-    int *P = new int[n];
+    int* P = new int[n];
     int C = 0, R = 0;
     for (int i = 1; i < n - 1; i++) 
     {
-        int i_mirror = 2 * C - i; // equals to i' = C - (i-C)
+        int i_mirror = 2 * C - i; // equals to i' = C - (i - C)
     
         P[i] = (R > i) ? std::min(R-i, P[i_mirror]) : 0;
     

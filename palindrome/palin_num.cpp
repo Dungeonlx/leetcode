@@ -1,5 +1,54 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+int m_pos(const char* nptr, int c) 
+{
+    int pos = 0;
+
+    while (*nptr) 
+    {
+        if (*nptr == c) 
+            return pos;
+        nptr++;
+        pos++;
+    }
+
+    return pos;
+}
+
+int m_atoi(const char* nptr) 
+{
+    bool isNegative = false;
+    int i = 0;
+    int mul = strlen(nptr) - 1;
+
+    if (index(nptr, '.')) 
+        mul = m_pos(nptr, '.') - 1;
+
+    if (*nptr == '-') 
+        isNegative = true;
+    else 
+        i += (*nptr - 48) * pow(10, mul);
+
+    nptr++;
+    mul--;
+
+    while (*nptr) 
+    {
+        if (*nptr == '.')
+            break;
+        i += (*nptr - 48) * pow(10, mul);
+        nptr++;
+        mul--;
+    } 
+   
+    if (isNegative)
+        return 0 - i;
+
+    return i;
+}
 
 unsigned int reverse(unsigned int num) 
 {
@@ -37,6 +86,9 @@ bool isPalindrome(int x)
 int main(int argc, char* argv[]) 
 {
     unsigned int num = 616;
+
+    printf("%d\n", argv[1] ? m_atoi(argv[1]) : num);
+    printf("%d\n", argv[1] ? atoi(argv[1]) : num);
 
     printf("%d\n", argv[1] ? reverse(atoi(argv[1])) : reverse(num));
     
