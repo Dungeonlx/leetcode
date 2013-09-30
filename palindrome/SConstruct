@@ -1,3 +1,5 @@
 env = Environment(CCFLAGS='-g')
 
 env.Program('palin_str.cpp')
+
+env.Program('palin_num.cpp')
