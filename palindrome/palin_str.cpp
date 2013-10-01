@@ -14,7 +14,7 @@ std::string m_preProcess(std::string s)
     return ret;
 }
  
-std::string longestPalindrome(std::string s) 
+std::string Manacher(std::string s) 
 {
     std::string T = m_preProcess(s);
     std::cout << "PreProcessed: " << T << std::endl;
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     int find_pos = 0;
 
     file >> ori_str;
-    longest_parlin_str = longestPalindrome(ori_str);
+    longest_parlin_str = Manacher(ori_str);
     find_pos = ori_str.find(longest_parlin_str);
 
     color_str = ori_str.substr(0, find_pos) + "\033[33m" + longest_parlin_str 
