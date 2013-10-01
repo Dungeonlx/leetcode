@@ -59,6 +59,8 @@ public:
             std::sort(m_WordList.begin(), m_WordList.end(), String::CompareByLength);
             std::reverse(m_WordList.begin(), m_WordList.end());
         }
+
+        std::cout << m_WordList.size() << " words" << std::endl;
     }
     virtual ~Dict() 
     {

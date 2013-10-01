@@ -5,3 +5,5 @@ env.Program('palin_str.cpp')
 env.Program('palin_num.cpp')
 
 env.Program('find_word.cpp')
+
+env.Program('helper.cpp')
