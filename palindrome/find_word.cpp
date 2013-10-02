@@ -117,6 +117,9 @@ void solution(std::string str, std::vector<std::string> WordList)
         
         if (FindPos != std::string::npos) 
         {
+            //if (PosLengthMap.find(FindPos) != PosLengthMap.end()) 
+            //    continue;
+            
             if (isInRange(PosLengthMap, FindPos, WordList[i].size())) 
                 continue;
             PosLengthMap[FindPos] = WordList[i].size();

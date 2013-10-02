@@ -1,0 +1,3 @@
+env = Environment(CCFLAGS='-g')
+
+env.Program('about_stat.cpp')
